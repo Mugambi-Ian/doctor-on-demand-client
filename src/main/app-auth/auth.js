@@ -15,29 +15,31 @@ import {
   fadeOut,
   slideFadeInRight,
   slideInDown,
-  slideInLeft,
-  slideInRight,
   slideInUp,
-  slideOutLeft,
 } from '../../assets/animations';
-import {_auth, _database} from '../../assets/config';
+import {_auth} from '../../assets/config';
 
 const style = StyleSheet.create({
   mainContent: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#d4fffe',
+    backgroundColor: '#d6ffdc',
   },
   logoBox: {
     alignSelf: 'center',
     backgroundColor: '#f0fff2',
     borderRadius: 100,
-    marginTop: 10,
-    marginBottom: 10,
-  },
-  logo: {
     width: 120,
     height: 120,
+    marginTop: 10,
+    marginBottom: 10,
+    borderColor: '#e9e9e9',
+    borderWidth: 1,
+  },
+  logo: {
+    marginTop: 20,
+    width: 70,
+    height: 70,
     alignSelf: 'center',
   },
   loginBox: {
@@ -45,20 +47,21 @@ const style = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
+    borderColor: '#e9e9e9',
+    borderWidth: 1,
   },
   title: {
-    fontFamily: 'Raleway-SemiBold',
+    fontFamily: 'Quicksand-SemiBold',
     marginLeft: 20,
     marginRight: 20,
     marginTop: 20,
     fontSize: 20,
     color: '#000',
-    marginBottom: 20,
   },
   subTitle: {
-    fontFamily: 'Raleway-Light',
+    fontFamily: 'Quicksand-Light',
     marginLeft: 20,
-    marginTop: 20,
+    marginTop: 5,
     marginRight: 20,
     fontSize: 18,
     marginBottom: 20,
@@ -77,72 +80,50 @@ const style = StyleSheet.create({
     color: '#929292',
     marginLeft: 10,
     marginTop: 5,
-    fontFamily: 'Raleway-Regular',
+    fontFamily: 'Quicksand-Regular',
+    marginBottom: 5,
   },
   input: {
+    marginBottom: 5,
+    padding: 0,
+    marginLeft: 10,
     marginRight: 10,
     fontSize: 20,
-    fontFamily: 'Raleway-Medium',
+    fontFamily: 'Quicksand-Medium',
     color: '#000',
-    flex: 1,
-  },
-  field: {
-    flexDirection: 'row',
-    flex: 1,
-    paddingBottom: 2,
-  },
-  inputIcon: {
-    width: 20,
-    resizeMode: 'contain',
-    alignSelf: 'center',
-    marginRight: 10,
-    marginLeft: 15,
   },
   btn: {
-    marginBottom: 10,
+    position: 'absolute',
+    bottom: 20,
     left: 0,
     right: 0,
     flexDirection: 'row',
-    marginRight: 5,
-    marginLeft: 5,
+    marginRight: 10,
+    marginLeft: 10,
   },
   loginBtn: {
-    backgroundColor: '#1eb100',
+    backgroundColor: '#118fca',
     elevation: 2,
     borderRadius: 50,
     flex: 1,
-    marginRight: 5,
-    marginLeft: 5,
+    marginRight: 10,
+    marginLeft: 10,
   },
   loginBtnText: {
     alignSelf: 'center',
     color: '#fff',
-    fontFamily: 'Raleway-Bold',
+    fontFamily: 'Quicksand-Bold',
     fontSize: 20,
     padding: 10,
-  },
-  textLink: {
-    alignSelf: 'flex-end',
-    marginRight: 20,
-    marginTop: 10,
-    color: '#111',
-    fontFamily: 'Raleway-Light',
-    fontSize: 16,
-    borderColor: '#fff',
-    borderBottomColor: '#1eb100',
-    borderWidth: 2,
-    borderRadius: 10,
-    paddingRight: 10,
-    paddingLeft: 10,
-    paddingBottom: 5,
-    marginBottom: 20,
   },
 });
 
 export default class AuthScreen extends Component {
   state = {
     close: false,
-    currentScreen: 'signIn',
+    phoneNumber: '',
+    confirmCode: undefined,
+    verificationCode: '',
   };
   componentDidMount() {
     this.props.init();
@@ -150,273 +131,162 @@ export default class AuthScreen extends Component {
   render() {
     return (
       <Animatable.View
-        animation={this.state.close === false ? slideInRight : slideOutLeft}
+        animation={this.state.close === false ? slideFadeInRight : fadeOut}
         style={style.mainContent}>
-        <StatusBar barStyle="dark-content" backgroundColor="#d4fffe" />
+        <StatusBar barStyle="light-content" backgroundColor="#118fca" />
         <View style={style.logoBox}>
           <Image
-            source={require('../../assets/drawable/logo.png')}
+            source={require('../../assets/drawables/r_icon.png')}
             style={style.logo}
           />
         </View>
-        {this.state.currentScreen === 'signIn' ? (
-          <SignIn
-            createAccount={() => {
-              this.setState({currentScreen: 'create'});
+        {this.state.confirmCode ? (
+          <VerifyCode
+            updateVerificationCode={(x) => {
+              this.setState({verificationCode: x});
             }}
-            authorizeUser={async () => {
-              this.setState({close: true});
-              await setTimeout(() => {
-                this.props.authorizeUser();
-              }, 500);
-            }}
-            openSnack={this.props.openSnack}
-            openTimedSnack={this.props.openTimedSnack}
-            closeSnack={this.props.closeSnack}
-          />
-        ) : this.state.currentScreen === 'create' ? (
-          <CreateAccount
-            cancelSignUp={() => {
-              this.setState({currentScreen: 'signIn'});
-            }}
-            authorizeUser={async () => {
-              this.setState({close: true});
-              await setTimeout(() => {
-                this.props.authorizeUser();
-              }, 500);
-            }}
-            openSnack={this.props.openSnack}
-            openTimedSnack={this.props.openTimedSnack}
-            closeSnack={this.props.closeSnack}
+            verificationCode={this.state.verificationCode}
           />
         ) : (
-          <Animatable.View></Animatable.View>
+          <SendCode
+            updatePhoneNumber={(x) => {
+              this.setState({phoneNumber: x});
+            }}
+            phoneNumber={this.state.phoneNumber}
+          />
+        )}
+        {this.state.confirmCode ? (
+          <Animatable.View delay={500} style={style.btn} animation={fadeIn}>
+            <TouchableOpacity
+              style={style.loginBtn}
+              onPress={async () => {
+                await setTimeout(async () => {
+                  this.props.openSnack('Verifying Code...');
+                  await this.state.confirmCode
+                    .confirm(this.state.verificationCode)
+                    .then(async (x) => {
+                      this.props.closeSnack();
+                      this.setState({confirmCode: x});
+                      await setTimeout(async () => {
+                        this.props.openTimedSnack('Verification Succesfull!');
+                        this.setState({close: true});
+                        await setTimeout(() => {
+                          this.props.authorizeUser();
+                        }, 500);
+                      }, 500);
+                    })
+                    .catch(async (x) => {
+                      this.props.closeSnack();
+                      console.log(x);
+                      await setTimeout(() => {
+                        this.props.openTimedSnack('Verification Failed!');
+                      }, 500);
+                    });
+                }, 100);
+              }}>
+              <Text style={style.loginBtnText}>Confirm</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={style.loginBtn}
+              onPress={async () => {
+                await setTimeout(async () => {
+                  this.setState({confirmCode: undefined});
+                }, 100);
+              }}>
+              <Text style={style.loginBtnText}>Cancel</Text>
+            </TouchableOpacity>
+          </Animatable.View>
+        ) : (
+          <Animatable.View
+            delay={500}
+            style={style.btn}
+            animation={slideInDown}>
+            <TouchableOpacity
+              style={style.loginBtn}
+              onPress={async () => {
+                await setTimeout(async () => {
+                  this.props.openSnack('Sending Code...');
+                  await _auth
+                    .signInWithPhoneNumber(this.state.phoneNumber)
+                    .then(async (x) => {
+                      this.props.closeSnack();
+                      this.setState({confirmCode: x});
+                      await setTimeout(() => {
+                        this.props.openTimedSnack('Code Sent!');
+                      }, 500);
+                    })
+                    .catch(async (x) => {
+                      this.props.closeSnack();
+                      console.log(x);
+                      await setTimeout(() => {
+                        this.props.openTimedSnack('Code Sending Failed!');
+                      }, 500);
+                    });
+                }, 100);
+              }}>
+              <Text style={style.loginBtnText}>Verify</Text>
+            </TouchableOpacity>
+          </Animatable.View>
         )}
       </Animatable.View>
     );
   }
 }
 
-class SignIn extends Component {
-  state = {email: '', password: ''};
+class SendCode extends Component {
   render() {
     return (
       <Animatable.View
         delay={500}
         style={style.loginBox}
         animation={slideInDown}>
-        <Text style={style.title}>
-          Enter your email and password to get started
-        </Text>
         <ScrollView>
-          <View style={style.inputField}>
-            <Text style={style.inputFieldText}>E-mail</Text>
-            <View style={style.field}>
-              <Image
-                source={require('../../assets/drawable/icon-mail.png')}
-                style={style.inputIcon}
-              />
-              <TextInput
-                style={style.input}
-                placeholder="peterkirui@gmail.com"
-                onChangeText={(x) => {
-                  this.setState({email: x});
-                }}
-                value={this.state.email}
-              />
-            </View>
-          </View>
-          <View style={style.inputField}>
-            <Text style={style.inputFieldText}>Password</Text>
-            <View style={style.field}>
-              <Image
-                source={require('../../assets/drawable/field-password.png')}
-                style={style.inputIcon}
-              />
-              <TextInput
-                style={style.input}
-                placeholder="password"
-                onChangeText={(x) => {
-                  this.setState({password: x});
-                }}
-                value={this.state.password}
-                secureTextEntry={true}
-              />
-            </View>
-          </View>
-          <Text style={style.subTitle}>
-            Click create for account registration
+          <Text style={style.title}>
+            Enter your phone number to get started
           </Text>
-          <TouchableOpacity>
-            <Text style={style.textLink}>Forgot Password?</Text>
-          </TouchableOpacity>
+          <Text style={style.subTitle}>
+            We will send you a verification code
+          </Text>
+          <View style={style.inputField}>
+            <Text style={style.inputFieldText}>PhoneNumber</Text>
+            <TextInput
+              style={style.input}
+              placeholder="+1 650-555-3434"
+              onChangeText={(x) => {
+                this.props.updatePhoneNumber(x);
+              }}
+              value={this.props.phoneNumber}
+            />
+          </View>
         </ScrollView>
-        <Animatable.View delay={500} style={style.btn} animation={slideInDown}>
-          <TouchableOpacity
-            style={style.loginBtn}
-            onPress={async () => {
-              await setTimeout(() => {
-                this.props.createAccount();
-              }, 100);
-            }}>
-            <Text style={style.loginBtnText}>Create</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={style.loginBtn}
-            onPress={async () => {
-              await setTimeout(async () => {
-                if (
-                  this.state.email.length !== 0 &&
-                  this.state.password !== 0
-                ) {
-                  this.props.openSnack('Signing In');
-                  await _auth
-                    .signInWithEmailAndPassword(
-                      this.state.email,
-                      this.state.password,
-                    )
-                    .then(async (x) => {
-                      this.props.closeSnack();
-                      await setTimeout(() => {
-                        this.props.openTimedSnack('Sign in Successfull');
-                      }, 100);
-                      await this.props.authorizeUser();
-                    })
-                    .catch(async () => {
-                      this.props.closeSnack();
-                      await setTimeout(() => {
-                        this.props.openTimedSnack('Sign in Failed');
-                      }, 100);
-                    });
-                } else {
-                  this.props.openTimedSnack('All fields are required');
-                }
-              }, 100);
-            }}>
-            <Text style={style.loginBtnText}>Sign In</Text>
-          </TouchableOpacity>
-        </Animatable.View>
       </Animatable.View>
     );
   }
 }
-
-class CreateAccount extends Component {
-  state = {
-    email: '',
-    password: '',
-    _password: '',
-  };
+class VerifyCode extends Component {
   render() {
     return (
-      <Animatable.View style={style.loginBox} animation={slideInLeft}>
-        <Text style={style.title}>Create your account to get started</Text>
+      <Animatable.View
+        delay={500}
+        style={style.loginBox}
+        animation={slideInDown}>
         <ScrollView>
+          <Text style={style.title}>Enter the code we sent you</Text>
+          <Text style={style.subTitle}>
+            Authenticate your phone number to proceed
+          </Text>
           <View style={style.inputField}>
-            <Text style={style.inputFieldText}>*E-mail</Text>
-            <View style={style.field}>
-              <Image
-                source={require('../../assets/drawable/icon-mail.png')}
-                style={style.inputIcon}
-              />
-              <TextInput
-                style={style.input}
-                placeholder="peterkirui@gmail.com"
-                onChangeText={(x) => {
-                  this.setState({email: x});
-                }}
-                value={this.state.email}
-              />
-            </View>
-          </View>
-          <View style={style.inputField}>
-            <Text style={style.inputFieldText}>*Password</Text>
-            <View style={style.field}>
-              <Image
-                source={require('../../assets/drawable/field-password.png')}
-                style={style.inputIcon}
-              />
-              <TextInput
-                style={style.input}
-                placeholder="Password"
-                onChangeText={(x) => {
-                  this.setState({password: x});
-                }}
-                value={this.state.password}
-                secureTextEntry={true}
-              />
-            </View>
-          </View>
-          <View style={style.inputField}>
-            <Text style={style.inputFieldText}>*Confirm Password</Text>
-            <View style={style.field}>
-              <Image
-                source={require('../../assets/drawable/field-password.png')}
-                style={style.inputIcon}
-              />
-              <TextInput
-                style={style.input}
-                placeholder="Confirm Password"
-                onChangeText={(x) => {
-                  this.setState({_password: x});
-                }}
-                value={this.state._password}
-                secureTextEntry={true}
-              />
-            </View>
+            <Text style={style.inputFieldText}>Verification Code</Text>
+            <TextInput
+              style={style.input}
+              placeholder="123456"
+              onChangeText={(x) => {
+                this.props.updateVerificationCode(x);
+              }}
+              value={this.props.verificationCode}
+            />
           </View>
         </ScrollView>
-        <Animatable.View delay={500} style={style.btn} animation={slideInDown}>
-          <TouchableOpacity
-            style={style.loginBtn}
-            onPress={async () => {
-              await setTimeout(async () => {
-                if (
-                  this.state.email.length !== 0 &&
-                  this.state.password.length !== 0 &&
-                  this.state.password === this.state._password
-                ) {
-                  this.props.openSnack('Creating Account');
-                  await _auth
-                    .createUserWithEmailAndPassword(
-                      this.state.email,
-                      this.state.password,
-                    )
-                    .then(async (x) => {
-                      this.props.closeSnack();
-                      const __ = {
-                        email: this.state.email,
-                      };
-                      await _database.ref('users/' + x.user.uid).set(__);
-                      await this.props.authorizeUser();
-                      await setTimeout(() => {
-                        this.props.openTimedSnack('Created Successfully');
-                      }, 100);
-                    })
-                    .catch(async (x) => {
-                      await setTimeout(() => {
-                        this.props.openTimedSnack('Creation Failed');
-                      }, 100);
-                    });
-                } else if (this.state.password !== this.state._password) {
-                  this.props.openTimedSnack('Password mismatch!');
-                } else {
-                  this.props.openTimedSnack('All fields are required');
-                }
-              }, 100);
-            }}>
-            <Text style={style.loginBtnText}>Sign up</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={style.loginBtn}
-            onPress={async () => {
-              await setTimeout(() => {
-                this.props.cancelSignUp();
-              }, 100);
-            }}>
-            <Text style={style.loginBtnText}>Cancel</Text>
-          </TouchableOpacity>
-        </Animatable.View>
       </Animatable.View>
     );
   }
