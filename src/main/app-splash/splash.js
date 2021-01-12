@@ -26,7 +26,7 @@ const style = StyleSheet.create({
     alignSelf: 'center',
     resizeMode: 'contain',
     borderRadius: 20,
-    backgroundColor: '#abd9ac',
+    backgroundColor: '#ccfbff',
     justifyContent: 'center',
   },
   logoImg: {
@@ -69,11 +69,7 @@ export default class SplashScreen extends Component {
         delay={this.state.out ? 400 : 0}
         animation={this.state.close === false ? fadeIn : slideOutLeft}
         style={style.mainContent}>
-        <StatusBar barStyle="dark-content" backgroundColor="#ece4e4" />
-        <Image
-          source={require('../../assets/drawable/background.png')}
-          style={style.bgImage}
-        />
+        <StatusBar barStyle="light-content" backgroundColor="#fff" />
         <Animatable.View
           delay={this.state.out ? 0 : 400}
           animation={this.state.out ? splashOut : splashIn}
@@ -82,7 +78,7 @@ export default class SplashScreen extends Component {
             style={style.logoImg}
             source={require('../../assets/drawable/logo.png')}
           />
-          <Text style={style.logoText}>Eat & Refresh</Text>
+          <Text style={style.logoText}>Doctor On Call</Text>
         </Animatable.View>
       </Animatable.View>
     );

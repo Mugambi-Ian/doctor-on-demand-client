@@ -40,6 +40,14 @@ export const slideInDown = {
     translateY: 0,
   },
 };
+export const slideInDownLess = {
+  0: {
+    translateX: 100,
+  },
+  1: {
+    translateX: 0,
+  },
+};
 export const zoomIn = {
   0: {
     opacity: 0,

@@ -1,6 +1,7 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, {Component} from 'react';
 import {
+  BackHandler,
   Image,
   StatusBar,
   StyleSheet,
@@ -8,12 +9,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import LocationSwitch from 'react-native-location-permission';
 import * as Animatable from 'react-native-animatable';
 import {PulseIndicator} from 'react-native-indicators';
 import {fadeIn, slideInDown, slideInRight} from '../../assets/animations';
 import {_auth, _database} from '../../assets/config';
-import Menu from './menu/menu';
-import MyInfo from './my-info/my-info';
+import MyInfo, {SetDp} from './my-info/my-info';
+import LocationWidget from './pin-location/pin-location';
+import MyProfile from './my-profile/my-profile';
 const style = StyleSheet.create({
   mainContent: {
     height: '100%',
@@ -31,7 +34,7 @@ const style = StyleSheet.create({
   loaderText: {
     alignSelf: 'center',
     color: '#ffffff',
-    backgroundColor: '#1eb100',
+    backgroundColor: '#118fca',
     paddingLeft: 20,
     paddingRight: 20,
     paddingTop: 5,
@@ -39,20 +42,16 @@ const style = StyleSheet.create({
     marginTop: '150%',
     borderRadius: 50,
     fontSize: 20,
-    fontFamily: 'Raleway-Regular',
+    fontFamily: 'Quicksand-Regular',
   },
   navBar: {
     position: 'absolute',
     borderTopEndRadius: 10,
     borderTopLeftRadius: 10,
-    backgroundColor: '#fff',
     height: 60,
     left: 0,
     right: 0,
     bottom: 0,
-    elevation: 4,
-    borderColor: '#ece4e4',
-    borderWidth: 1,
     flexDirection: 'row',
   },
   bgImage: {
@@ -63,6 +62,12 @@ const style = StyleSheet.create({
   navItem: {
     flex: 1,
     justifyContent: 'center',
+    elevation: 4,
+    marginLeft: 2,
+    marginRight: 2,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    backgroundColor: '#fff',
   },
   navItemIcon: {
     height: 25,
@@ -73,41 +78,81 @@ const style = StyleSheet.create({
   },
   navItemText: {
     alignSelf: 'center',
-    fontFamily: 'Raleway-Regular',
+    fontFamily: 'Quicksand-Regular',
     color: '#999',
     marginBottom: 5,
   },
 });
 export default class Home extends Component {
-  state = {loading: true, init: undefined};
+  state = {
+    loading: true,
+    init: undefined,
+    user: {
+      userName: '',
+      userDp: '',
+      phoneNumber: '',
+      practice: '',
+      title: '',
+      idNumber: '',
+    },
+  };
   async componentDidMount() {
-    await _database.ref('users/' + _auth.currentUser.uid).on('value', (x) => {
-      if (x.hasChild('serviceNumber') === false) {
+    await _database.ref('doctors/' + _auth.currentUser.uid).on('value', (x) => {
+      if (x.hasChild('userName') === false) {
         this.setState({init: true});
       }
-      this.setState({loading: false});
+      if (x.hasChild('userDp') === false) {
+        this.setState({setDp: true});
+      }
+      const {
+        userName,
+        userDp,
+        phoneNumber,
+        practice,
+        title,
+        idNumber,
+      } = x.val();
+      const user = {userName, userDp, phoneNumber, practice, title, idNumber};
+      this.setState({loading: false, user: user});
     });
   }
   render() {
     return (
-      <Animatable.View animation={fadeIn}>
-        <StatusBar barStyle="dark-content" backgroundColor="#d4fffe" />
+      <Animatable.View animation={fadeIn} style={{backgroundColor: '#fff'}}>
         {this.state.loading === true ? (
           <View style={style.mainContent}>
-            <PulseIndicator color={'#1eb100'} style={style.loader} size={100} />
+            <PulseIndicator color={'#118fca'} style={style.loader} size={100} />
             <Text style={style.loaderText}>Please Hold...</Text>
           </View>
         ) : this.state.init ? (
           <MyInfo
+            user={this.state.user}
             openSnack={this.props.openSnack}
             openTimedSnack={this.props.openTimedSnack}
             closeSnack={this.props.closeSnack}
+            closeInfo={() => {
+              this.setState({init: undefined});
+            }}
+          />
+        ) : this.state.setDp ? (
+          <SetDp
+            openSnack={this.props.openSnack}
+            openTimedSnack={this.props.openTimedSnack}
+            closeSnack={this.props.closeSnack}
+            closeInfo={() => {
+              this.setState({setDp: undefined});
+            }}
           />
         ) : (
           <LandingPage
             openSnack={this.props.openSnack}
             openTimedSnack={this.props.openTimedSnack}
             closeSnack={this.props.closeSnack}
+            user={this.state.user}
+            updateInfo={() => {
+              this.setState({init: true});
+            }}
+            unauthorizeUser={this.props.unauthorizeUser}
           />
         )}
       </Animatable.View>
@@ -119,28 +164,61 @@ class LandingPage extends Component {
   state = {
     currentscreen: 'home',
   };
+  async componentDidMount() {
+    LocationSwitch.isLocationEnabled(
+      async () => {},
+      () => {
+        LocationSwitch.enableLocationService();
+      },
+    );
+    this.backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      this.backAction,
+    );
+  }
+  componentWillUnmount() {
+    this.backHandler.remove();
+  }
   render() {
     return (
-      <Animatable.View animation={slideInRight} style={style.mainContent}>
-        <Image
-          source={require('../../assets/drawable/background.png')}
-          style={style.bgImage}
-        />
-        <StatusBar backgroundColor={'#ece4e4'} />
-        {this.state.currentscreen === 'home' ? <Menu /> : <View />}
+      <Animatable.View
+        animation={slideInRight}
+        style={{...style.mainContent, backgroundColor: '#fff'}}>
+        <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+        {this.state.currentscreen === 'home' ? (
+          <LocationWidget />
+        ) : this.state.currentscreen === 'profile' ? (
+          <MyProfile
+            user={this.props.user}
+            openSnack={this.props.openSnack}
+            openTimedSnack={this.props.openTimedSnack}
+            closeSnack={this.props.closeSnack}
+            updateInfo={this.props.updateInfo}
+            unauthorizeUser={this.props.unauthorizeUser}
+          />
+        ) : (
+          <View />
+        )}
         <Animatable.View
           animation={slideInDown}
-          delay={500}
+          delay={200}
           style={style.navBar}>
           <TouchableOpacity
             style={
               this.state.currentscreen === 'home'
                 ? {
                     ...style.navItem,
-                    backgroundColor: '#1eb100',
-                    borderTopLeftRadius: 10,
+                    backgroundColor: '#118fca',
+                    borderTopLeftRadius: 0,
+                    marginLeft: 0,
+                    marginRight: 4,
                   }
-                : {...style.navItem, borderTopLeftRadius: 10}
+                : {
+                    ...style.navItem,
+                    borderTopLeftRadius: 0,
+                    marginLeft: 0,
+                    marginRight: 4,
+                  }
             }
             onPress={async () => {
               if (this.state.currentscreen !== 'home') {
@@ -159,7 +237,7 @@ class LandingPage extends Component {
                   ? {
                       ...style.navItemText,
                       color: '#fff',
-                      fontFamily: 'Raleway-Medium',
+                      fontFamily: 'Quicksand-Medium',
                     }
                   : style.navItemText
               }>
@@ -168,62 +246,32 @@ class LandingPage extends Component {
           </TouchableOpacity>
           <TouchableOpacity
             style={
-              this.state.currentscreen === 'order'
-                ? {...style.navItem, backgroundColor: '#1eb100'}
+              this.state.currentscreen === 'chat'
+                ? {...style.navItem, backgroundColor: '#118fca'}
                 : style.navItem
             }
             onPress={async () => {
-              if (this.state.currentscreen !== 'order') {
+              if (this.state.currentscreen !== 'chat') {
                 await setTimeout(() => {
-                  this.setState({currentscreen: 'order'});
+                  this.setState({currentscreen: 'chat'});
                 }, 100);
               }
             }}>
             <Image
-              source={require('../../assets/drawable/icon-orders.png')}
+              source={require('../../assets/drawable/icon-chat.png')}
               style={style.navItemIcon}
             />
             <Text
               style={
-                this.state.currentscreen === 'order'
+                this.state.currentscreen === 'chat'
                   ? {
                       ...style.navItemText,
                       color: '#fff',
-                      fontFamily: 'Raleway-Medium',
+                      fontFamily: 'Quicksand-Medium',
                     }
                   : style.navItemText
               }>
-              My Orders
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={
-              this.state.currentscreen === 'favourite'
-                ? {...style.navItem, backgroundColor: '#1eb100'}
-                : style.navItem
-            }
-            onPress={async () => {
-              if (this.state.currentscreen !== 'favourite') {
-                await setTimeout(() => {
-                  this.setState({currentscreen: 'favourite'});
-                }, 100);
-              }
-            }}>
-            <Image
-              source={require('../../assets/drawable/icon-favourite.png')}
-              style={style.navItemIcon}
-            />
-            <Text
-              style={
-                this.state.currentscreen === 'favourite'
-                  ? {
-                      ...style.navItemText,
-                      color: '#fff',
-                      fontFamily: 'Raleway-Medium',
-                    }
-                  : style.navItemText
-              }>
-              Favourite
+              Chat
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -231,10 +279,17 @@ class LandingPage extends Component {
               this.state.currentscreen === 'profile'
                 ? {
                     ...style.navItem,
-                    backgroundColor: '#1eb100',
-                    borderTopRightRadius: 10,
+                    backgroundColor: '#118fca',
+                    borderTopRightRadius: 0,
+                    marginRight: 0,
+                    marginLeft: 4,
                   }
-                : {...style.navItem, borderTopRightRadius: 10}
+                : {
+                    ...style.navItem,
+                    borderTopRightRadius: 0,
+                    marginRight: 0,
+                    marginLeft: 4,
+                  }
             }
             onPress={async () => {
               if (this.state.currentscreen !== 'profile') {
@@ -253,7 +308,7 @@ class LandingPage extends Component {
                   ? {
                       ...style.navItemText,
                       color: '#fff',
-                      fontFamily: 'Raleway-Medium',
+                      fontFamily: 'Quicksand-Medium',
                     }
                   : style.navItemText
               }>

@@ -15,7 +15,9 @@ import {
   fadeOut,
   slideFadeInRight,
   slideInDown,
+  slideInRight,
   slideInUp,
+  slideOutLeft,
 } from '../../assets/animations';
 import {_auth} from '../../assets/config';
 
@@ -23,23 +25,19 @@ const style = StyleSheet.create({
   mainContent: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#d6ffdc',
+    backgroundColor: '#ccfbff',
   },
   logoBox: {
     alignSelf: 'center',
-    backgroundColor: '#f0fff2',
     borderRadius: 100,
     width: 120,
     height: 120,
     marginTop: 10,
     marginBottom: 10,
-    borderColor: '#e9e9e9',
-    borderWidth: 1,
   },
   logo: {
-    marginTop: 20,
-    width: 70,
-    height: 70,
+    width: 120,
+    height: 120,
     alignSelf: 'center',
   },
   loginBox: {
@@ -131,12 +129,12 @@ export default class AuthScreen extends Component {
   render() {
     return (
       <Animatable.View
-        animation={this.state.close === false ? slideFadeInRight : fadeOut}
+        animation={this.state.close === false ? slideInRight : slideOutLeft}
         style={style.mainContent}>
-        <StatusBar barStyle="light-content" backgroundColor="#118fca" />
+        <StatusBar barStyle="dark-content" backgroundColor="#ccfbff" />
         <View style={style.logoBox}>
           <Image
-            source={require('../../assets/drawables/r_icon.png')}
+            source={require('../../assets/drawable/logo.png')}
             style={style.logo}
           />
         </View>
