@@ -155,7 +155,8 @@ export default class MyInfo extends Component {
     userName: '',
     title: '',
     idNumber: '',
-    practice: '',
+    sex: '',
+    dateOfBirth: '',
   };
 
   async componentDidMount() {
@@ -163,11 +164,18 @@ export default class MyInfo extends Component {
       userName,
       userDp,
       phoneNumber,
-      practice,
-      title,
+      sex,
       idNumber,
+      dateOfBirth,
     } = this.props.user;
-    const user = {userName, userDp, phoneNumber, practice, title, idNumber};
+    const user = {
+      userName,
+      userDp,
+      phoneNumber,
+      sex,
+      idNumber,
+      dateOfBirth,
+    };
     await setTimeout(() => {
       this.setState(user);
     }, 100);
@@ -201,23 +209,6 @@ export default class MyInfo extends Component {
           animation={slideInDown}>
           <Text style={style.title}>Enter your information</Text>
           <ScrollView>
-            <View style={style.inputField}>
-              <Text style={style.inputFieldText}>*Title</Text>
-              <View style={style.field}>
-                <Image
-                  source={require('../../../assets/drawable/icon-title.png')}
-                  style={style.inputIcon}
-                />
-                <TextInput
-                  style={style.input}
-                  placeholder="Dr."
-                  onChangeText={(x) => {
-                    this.setState({title: x});
-                  }}
-                  value={this.state.title}
-                />
-              </View>
-            </View>
             <View style={style.inputField}>
               <Text style={style.inputFieldText}>*Full Name</Text>
               <View style={style.field}>
@@ -253,19 +244,78 @@ export default class MyInfo extends Component {
               </View>
             </View>
             <View style={style.inputField}>
-              <Text style={style.inputFieldText}>*Major Practice</Text>
+              <Text style={style.inputFieldText}>*sex</Text>
               <View style={style.field}>
                 <Image
-                  source={require('../../../assets/drawable/icon-practice.png')}
+                  source={require('../../../assets/drawable/icon-gender.png')}
+                  style={style.inputIcon}
+                />
+                <View style={{flexDirection: 'row', flex: 1}}>
+                  <TouchableOpacity
+                    onPress={async () => {
+                      await setTimeout(() => {
+                        this.setState({sex: 'male'});
+                      }, 100);
+                    }}
+                    style={
+                      this.state.sex === 'male'
+                        ? {...style.editBtn, marginBottom: 5}
+                        : {
+                            ...style.editBtn,
+                            marginBottom: 5,
+                            backgroundColor: '#fee',
+                          }
+                    }>
+                    <Text
+                      style={
+                        this.state.sex === 'male'
+                          ? {...style.editBtnText}
+                          : {...style.editBtnText, color: '#118fca'}
+                      }>
+                      Male
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={async () => {
+                      await setTimeout(() => {
+                        this.setState({sex: 'female'});
+                      }, 100);
+                    }}
+                    style={
+                      this.state.sex === 'female'
+                        ? {...style.editBtn, marginBottom: 5}
+                        : {
+                            ...style.editBtn,
+                            marginBottom: 5,
+                            backgroundColor: '#fee',
+                          }
+                    }>
+                    <Text
+                      style={
+                        this.state.sex === 'female'
+                          ? {...style.editBtnText}
+                          : {...style.editBtnText, color: '#118fca'}
+                      }>
+                      Female
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+            <View style={style.inputField}>
+              <Text style={style.inputFieldText}>*Date Of Birth</Text>
+              <View style={style.field}>
+                <Image
+                  source={require('../../../assets/drawable/icon-calendar.png')}
                   style={style.inputIcon}
                 />
                 <TextInput
                   style={style.input}
-                  placeholder="Clinical Medicine"
+                  placeholder="12.12.1975"
                   onChangeText={(x) => {
-                    this.setState({practice: x});
+                    this.setState({dateOfBirth: x});
                   }}
-                  value={this.state.practice}
+                  value={this.state.dateOfBirth}
                 />
               </View>
             </View>
@@ -281,18 +331,20 @@ export default class MyInfo extends Component {
                   if (
                     this.state.userName.length !== 0 &&
                     this.state.idNumber.length !== 0 &&
-                    this.state.title.length !== 0 &&
-                    this.state.practice.length !== 0
+                    this.state.dateOfBirth.length !== 0 &&
+                    this.state.sex.length !== 0
                   ) {
                     this.props.openSnack('Saving');
                     await _database
-                      .ref('doctors/' + _auth.currentUser.uid)
+                      .ref('customers/' + _auth.currentUser.uid)
                       .once('value', async (x) => {
                         this.props.closeSnack();
                         await x.child('userName').ref.set(this.state.userName);
                         await x.child('idNumber').ref.set(this.state.idNumber);
-                        await x.child('title').ref.set(this.state.title);
-                        await x.child('practice').ref.set(this.state.practice);
+                        await x.child('sex').ref.set(this.state.sex);
+                        await x
+                          .child('dateOfBirth')
+                          .ref.set(this.state.dateOfBirth);
                         await x
                           .child('phoneNumber')
                           .ref.set(_auth.currentUser.phoneNumber);
@@ -374,7 +426,7 @@ export class SetDp extends Component {
                   const _file = await response.blob();
                   const id = _auth.currentUser.uid + new Date().getTime();
                   const uploadTask = _storage
-                    .ref('doctors/' + _auth.currentUser.uid)
+                    .ref('customers/' + _auth.currentUser.uid)
                     .child(id)
                     .put(_file);
                   uploadTask
@@ -387,7 +439,7 @@ export class SetDp extends Component {
                             async function (downloadURL) {
                               var url = '' + downloadURL;
                               await _database
-                                .ref('doctors/' + _auth.currentUser.uid)
+                                .ref('customers/' + _auth.currentUser.uid)
                                 .child('userDp')
                                 .set(url);
                               this.setState({close: true});

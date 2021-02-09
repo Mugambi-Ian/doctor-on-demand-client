@@ -74,6 +74,11 @@
 		<string>Raleway-Thin.ttf</string>
 		<string>Raleway-ThinItalic.ttf</string>
 		<string>Title-Bold.ttf</string>
+		<string>Quicksand-Bold.ttf</string>
+		<string>Quicksand-Light.ttf</string>
+		<string>Quicksand-Medium.ttf</string>
+		<string>Quicksand-Regular.ttf</string>
+		<string>Quicksand-SemiBold.ttf</string>
 	</array>
 </dict>
 </plist>

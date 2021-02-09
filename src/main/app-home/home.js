@@ -89,32 +89,47 @@ export default class Home extends Component {
     init: undefined,
     user: {
       userName: '',
-      userDp: '',
-      phoneNumber: '',
-      practice: '',
       title: '',
       idNumber: '',
+      sex: '',
+      dateOfBirth: '',
     },
   };
+  componentWillUnmount() {
+    this.db.off();
+  }
   async componentDidMount() {
-    await _database.ref('doctors/' + _auth.currentUser.uid).on('value', (x) => {
-      if (x.hasChild('userName') === false) {
-        this.setState({init: true});
-      }
-      if (x.hasChild('userDp') === false) {
-        this.setState({setDp: true});
-      }
-      const {
-        userName,
-        userDp,
-        phoneNumber,
-        practice,
-        title,
-        idNumber,
-      } = x.val();
-      const user = {userName, userDp, phoneNumber, practice, title, idNumber};
-      this.setState({loading: false, user: user});
-    });
+    this.db = _database.ref();
+    await this.db
+      .child('customers/' + _auth.currentUser.uid)
+      .on('value', (x) => {
+        if (x.hasChild('userName') === false) {
+          this.setState({init: true});
+        }
+        if (x.hasChild('userDp') === false) {
+          this.setState({setDp: true});
+        }
+        if (x.hasChildren() === true) {
+          const {
+            userName,
+            userDp,
+            phoneNumber,
+            idNumber,
+            sex,
+            dateOfBirth,
+          } = x.val();
+          const user = {
+            userName,
+            userDp,
+            phoneNumber,
+            sex,
+            dateOfBirth,
+            idNumber,
+          };
+          this.setState({user: user});
+        }
+        this.setState({loading: false});
+      });
   }
   render() {
     return (

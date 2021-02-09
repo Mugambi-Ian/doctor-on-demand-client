@@ -54,8 +54,7 @@ export default class MyProfile extends Component {
     return (
       <Animatable.View animation={slideInDownLess}>
         <Image source={{uri: user.userDp}} style={style.userDp} />
-        <Text style={style.title}>{user.title + ' ' + user.userName}</Text>
-        <Text style={style.title2}>{user.practice}</Text>
+        <Text style={style.title}>{user.userName}</Text>
         <TouchableOpacity
           style={{
             ...style.editBtn,
@@ -75,7 +74,7 @@ export default class MyProfile extends Component {
                 const _file = await response.blob();
                 const id = _auth.currentUser.uid + new Date().getTime();
                 const uploadTask = _storage
-                  .ref('doctors/' + _auth.currentUser.uid)
+                  .ref('customers/' + _auth.currentUser.uid)
                   .child(id)
                   .put(_file);
                 uploadTask
@@ -88,7 +87,7 @@ export default class MyProfile extends Component {
                           async function (downloadURL) {
                             var url = '' + downloadURL;
                             await _database
-                              .ref('doctors/' + _auth.currentUser.uid)
+                              .ref('customers/' + _auth.currentUser.uid)
                               .child('userDp')
                               .set(url);
                             this.props.openTimedSnack('Save Successfull');
