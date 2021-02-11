@@ -7,6 +7,7 @@ import {
   Dimensions,
   Image,
   Keyboard,
+  Linking,
   StyleSheet,
   Text,
   TextInput,
@@ -20,6 +21,7 @@ import {
   slideOutLeft,
   slideOutRight,
 } from '../../../assets/animations';
+import Conditions from '../customer-condtions/condtions';
 
 const {width, height} = Dimensions.get('window');
 
@@ -90,7 +92,7 @@ export default class LocationWidget extends Component {
       longitudeDelta: 0,
     }),
     activeDoctors: [],
-    search: {keyWord: '', searchResult: undefined, searching: false},
+    search: {keyWord: '', searchResult: [], searching: undefined},
   };
 
   async componentDidMount() {
@@ -111,17 +113,18 @@ export default class LocationWidget extends Component {
         };
         ac.push(doc);
       });
-
+      const dat_ = [];
       await this.db.child('doctors/').on('value', (d) => {
         ac.forEach((x, i) => {
           x.docDp = d.child(x.docId + '/userDp').val();
           x.docData = d.child(x.docId).val();
+          x.docData.docId = x.docId;
           x.openDoc = () => {
             this.setState({showDoc: x.docData});
           };
-          ac[i] = x;
+          dat_.push(x);
         });
-        this.setState({activeDoctors: ac});
+        this.setState({activeDoctors: dat_});
       });
     });
     GetLocation.getCurrentPosition({
@@ -194,7 +197,16 @@ export default class LocationWidget extends Component {
   });
 
   render() {
-    return (
+    return this.state.conditions ? (
+      <Conditions
+        close={() => {
+          this.setState({conditions: undefined});
+        }}
+        openSnack={this.props.openSnack}
+        openTimedSnack={this.props.openTimedSnack}
+        closeSnack={this.props.closeSnack}
+      />
+    ) : (
       <Animatable.View style={style.container} delay={400} animation={fadeIn}>
         {this.state.searchScreen === undefined ? (
           <MapView
@@ -202,18 +214,31 @@ export default class LocationWidget extends Component {
             showUserLocation
             followUserLocation
             region={this.getMapRegion()}>
-            {this.state.activeDoctors.map((x, i) => {
-              return (
-                <Marker.Animated
-                  coordinate={x.coordinate}
-                  key={i}
-                  onPress={x.openDoc}>
-                  <TouchableOpacity style={style.markerBtn}>
-                    <Image source={{uri: x.docDp}} style={style.marker} />
-                  </TouchableOpacity>
-                </Marker.Animated>
-              );
-            })}
+            {this.state.search.searching === true
+              ? this.state.search.searchResult.map((x, i) => {
+                  return (
+                    <Marker.Animated
+                      coordinate={x.coordinate}
+                      key={i}
+                      onPress={x.openDoc}>
+                      <TouchableOpacity style={style.markerBtn}>
+                        <Image source={{uri: x.docDp}} style={style.marker} />
+                      </TouchableOpacity>
+                    </Marker.Animated>
+                  );
+                })
+              : this.state.activeDoctors.map((x, i) => {
+                  return (
+                    <Marker.Animated
+                      coordinate={x.coordinate}
+                      key={i}
+                      onPress={x.openDoc}>
+                      <TouchableOpacity style={style.markerBtn}>
+                        <Image source={{uri: x.docDp}} style={style.marker} />
+                      </TouchableOpacity>
+                    </Marker.Animated>
+                  );
+                })}
           </MapView>
         ) : (
           <View style={{display: 'flex'}} />
@@ -245,15 +270,57 @@ export default class LocationWidget extends Component {
               }}
               value={this.state.search.keyWord}
             />
-            <TouchableOpacity style={{alignSelf: 'center', marginRight: -10}}>
+            <TouchableOpacity
+              style={{alignSelf: 'center', marginRight: -10}}
+              onPress={async () => {
+                await setTimeout(() => {
+                  var {keyWord, searchResult} = this.state.search;
+                  const ac = this.state.activeDoctors;
+                  if (keyWord.length !== 0) {
+                    keyWord = keyWord.toLowerCase();
+                    ac.forEach((x) => {
+                      if (
+                        x.docData.practice.toLowerCase().includes(keyWord) ===
+                        true
+                      ) {
+                        searchResult.push(x);
+                      }
+                    });
+                    this.setState({
+                      search: {searching: true, keyWord, searchResult},
+                    });
+                  }
+                  Keyboard.dismiss();
+                }, 100);
+              }}>
               <Image
                 source={require('../../../assets/drawable/icon-search.png')}
                 style={style.inputIcon}
               />
             </TouchableOpacity>
-            <TouchableOpacity style={{alignSelf: 'center', marginRight: 10}}>
+            <TouchableOpacity
+              style={{alignSelf: 'center', marginRight: 10}}
+              onPress={async () => {
+                await setTimeout(() => {
+                  if (this.state.search.searching === true) {
+                    this.setState({
+                      search: {
+                        keyWord: '',
+                        searchResult: [],
+                        searching: undefined,
+                      },
+                    });
+                  } else {
+                    this.setState({conditions: true});
+                  }
+                }, 100);
+              }}>
               <Image
-                source={require('../../../assets/drawable/icon-id-card.png')}
+                source={
+                  this.state.search.searching === true
+                    ? require('../../../assets/drawable/icon-close.png')
+                    : require('../../../assets/drawable/icon-report.png')
+                }
                 style={style.inputIcon}
               />
             </TouchableOpacity>
@@ -336,6 +403,11 @@ export default class LocationWidget extends Component {
                   justifyContent: 'center',
                   borderColor: '#118fca',
                   borderWidth: 1,
+                }}
+                onPress={async () => {
+                  await setTimeout(() => {
+                    Linking.openURL(`tel:${this.state.showDoc.phoneNumber}`);
+                  }, 100);
                 }}>
                 <Image
                   style={{width: 40, height: 40, alignSelf: 'center'}}
@@ -351,6 +423,11 @@ export default class LocationWidget extends Component {
                   justifyContent: 'center',
                   borderColor: '#118fca',
                   borderWidth: 1,
+                }}
+                onPress={async () => {
+                  await setTimeout(() => {
+                    this.props.newChat(this.state.showDoc.docId);
+                  }, 100);
                 }}>
                 <Image
                   style={{width: 40, height: 40, alignSelf: 'center'}}

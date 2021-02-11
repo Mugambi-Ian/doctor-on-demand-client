@@ -1,7 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, {Component} from 'react';
 import {
-  BackHandler,
   Image,
   StatusBar,
   StyleSheet,
@@ -17,6 +16,7 @@ import {_auth, _database} from '../../assets/config';
 import MyInfo, {SetDp} from './my-info/my-info';
 import LocationWidget from './pin-location/pin-location';
 import MyProfile from './my-profile/my-profile';
+import Chat from './chat/chat';
 const style = StyleSheet.create({
   mainContent: {
     height: '100%',
@@ -178,6 +178,7 @@ export default class Home extends Component {
 class LandingPage extends Component {
   state = {
     currentscreen: 'home',
+    newChat: undefined,
   };
   async componentDidMount() {
     LocationSwitch.isLocationEnabled(
@@ -186,13 +187,6 @@ class LandingPage extends Component {
         LocationSwitch.enableLocationService();
       },
     );
-    this.backHandler = BackHandler.addEventListener(
-      'hardwareBackPress',
-      this.backAction,
-    );
-  }
-  componentWillUnmount() {
-    this.backHandler.remove();
   }
   render() {
     return (
@@ -201,7 +195,14 @@ class LandingPage extends Component {
         style={{...style.mainContent, backgroundColor: '#fff'}}>
         <StatusBar barStyle="dark-content" backgroundColor="#fff" />
         {this.state.currentscreen === 'home' ? (
-          <LocationWidget />
+          <LocationWidget
+            openSnack={this.props.openSnack}
+            openTimedSnack={this.props.openTimedSnack}
+            closeSnack={this.props.closeSnack}
+            newChat={(x) => {
+              this.setState({newChat: x, currentscreen: 'chat'});
+            }}
+          />
         ) : this.state.currentscreen === 'profile' ? (
           <MyProfile
             user={this.props.user}
@@ -211,126 +212,141 @@ class LandingPage extends Component {
             updateInfo={this.props.updateInfo}
             unauthorizeUser={this.props.unauthorizeUser}
           />
+        ) : this.state.currentscreen === 'chat' ? (
+          <Chat
+            user={this.props.user}
+            openSnack={this.props.openSnack}
+            openTimedSnack={this.props.openTimedSnack}
+            closeSnack={this.props.closeSnack}
+            newChat={this.state.newChat}
+            navOff={(c) => {
+              this.setState({navOff: c});
+            }}
+          />
         ) : (
           <View />
         )}
-        <Animatable.View
-          animation={slideInDown}
-          delay={200}
-          style={style.navBar}>
-          <TouchableOpacity
-            style={
-              this.state.currentscreen === 'home'
-                ? {
-                    ...style.navItem,
-                    backgroundColor: '#118fca',
-                    borderTopLeftRadius: 0,
-                    marginLeft: 0,
-                    marginRight: 4,
-                  }
-                : {
-                    ...style.navItem,
-                    borderTopLeftRadius: 0,
-                    marginLeft: 0,
-                    marginRight: 4,
-                  }
-            }
-            onPress={async () => {
-              if (this.state.currentscreen !== 'home') {
-                await setTimeout(() => {
-                  this.setState({currentscreen: 'home'});
-                }, 100);
-              }
-            }}>
-            <Image
-              source={require('../../assets/drawable/icon-home.png')}
-              style={style.navItemIcon}
-            />
-            <Text
+        {this.state.navOff ? (
+          <View style={{display: 'none'}} />
+        ) : (
+          <Animatable.View
+            animation={slideInDown}
+            delay={200}
+            style={style.navBar}>
+            <TouchableOpacity
               style={
                 this.state.currentscreen === 'home'
                   ? {
-                      ...style.navItemText,
-                      color: '#fff',
-                      fontFamily: 'Quicksand-Medium',
+                      ...style.navItem,
+                      backgroundColor: '#118fca',
+                      borderTopLeftRadius: 0,
+                      marginLeft: 0,
+                      marginRight: 4,
                     }
-                  : style.navItemText
-              }>
-              Home
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={
-              this.state.currentscreen === 'chat'
-                ? {...style.navItem, backgroundColor: '#118fca'}
-                : style.navItem
-            }
-            onPress={async () => {
-              if (this.state.currentscreen !== 'chat') {
-                await setTimeout(() => {
-                  this.setState({currentscreen: 'chat'});
-                }, 100);
+                  : {
+                      ...style.navItem,
+                      borderTopLeftRadius: 0,
+                      marginLeft: 0,
+                      marginRight: 4,
+                    }
               }
-            }}>
-            <Image
-              source={require('../../assets/drawable/icon-chat.png')}
-              style={style.navItemIcon}
-            />
-            <Text
+              onPress={async () => {
+                if (this.state.currentscreen !== 'home') {
+                  await setTimeout(() => {
+                    this.setState({currentscreen: 'home'});
+                  }, 100);
+                }
+              }}>
+              <Image
+                source={require('../../assets/drawable/icon-home.png')}
+                style={style.navItemIcon}
+              />
+              <Text
+                style={
+                  this.state.currentscreen === 'home'
+                    ? {
+                        ...style.navItemText,
+                        color: '#fff',
+                        fontFamily: 'Quicksand-Medium',
+                      }
+                    : style.navItemText
+                }>
+                Home
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
               style={
                 this.state.currentscreen === 'chat'
-                  ? {
-                      ...style.navItemText,
-                      color: '#fff',
-                      fontFamily: 'Quicksand-Medium',
-                    }
-                  : style.navItemText
-              }>
-              Chat
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={
-              this.state.currentscreen === 'profile'
-                ? {
-                    ...style.navItem,
-                    backgroundColor: '#118fca',
-                    borderTopRightRadius: 0,
-                    marginRight: 0,
-                    marginLeft: 4,
-                  }
-                : {
-                    ...style.navItem,
-                    borderTopRightRadius: 0,
-                    marginRight: 0,
-                    marginLeft: 4,
-                  }
-            }
-            onPress={async () => {
-              if (this.state.currentscreen !== 'profile') {
-                await setTimeout(() => {
-                  this.setState({currentscreen: 'profile'});
-                }, 100);
+                  ? {...style.navItem, backgroundColor: '#118fca'}
+                  : style.navItem
               }
-            }}>
-            <Image
-              source={require('../../assets/drawable/icon-profile.png')}
-              style={style.navItemIcon}
-            />
-            <Text
+              onPress={async () => {
+                if (this.state.currentscreen !== 'chat') {
+                  await setTimeout(() => {
+                    this.setState({currentscreen: 'chat', newChat: undefined});
+                  }, 100);
+                }
+              }}>
+              <Image
+                source={require('../../assets/drawable/icon-chat.png')}
+                style={style.navItemIcon}
+              />
+              <Text
+                style={
+                  this.state.currentscreen === 'chat'
+                    ? {
+                        ...style.navItemText,
+                        color: '#fff',
+                        fontFamily: 'Quicksand-Medium',
+                      }
+                    : style.navItemText
+                }>
+                Chat
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
               style={
                 this.state.currentscreen === 'profile'
                   ? {
-                      ...style.navItemText,
-                      color: '#fff',
-                      fontFamily: 'Quicksand-Medium',
+                      ...style.navItem,
+                      backgroundColor: '#118fca',
+                      borderTopRightRadius: 0,
+                      marginRight: 0,
+                      marginLeft: 4,
                     }
-                  : style.navItemText
-              }>
-              Profile
-            </Text>
-          </TouchableOpacity>
-        </Animatable.View>
+                  : {
+                      ...style.navItem,
+                      borderTopRightRadius: 0,
+                      marginRight: 0,
+                      marginLeft: 4,
+                    }
+              }
+              onPress={async () => {
+                if (this.state.currentscreen !== 'profile') {
+                  await setTimeout(() => {
+                    this.setState({currentscreen: 'profile'});
+                  }, 100);
+                }
+              }}>
+              <Image
+                source={require('../../assets/drawable/icon-profile.png')}
+                style={style.navItemIcon}
+              />
+              <Text
+                style={
+                  this.state.currentscreen === 'profile'
+                    ? {
+                        ...style.navItemText,
+                        color: '#fff',
+                        fontFamily: 'Quicksand-Medium',
+                      }
+                    : style.navItemText
+                }>
+                Profile
+              </Text>
+            </TouchableOpacity>
+          </Animatable.View>
+        )}
       </Animatable.View>
     );
   }

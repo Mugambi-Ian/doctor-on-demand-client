@@ -7,77 +7,51 @@ firebase.initializeApp(config());
 export const _auth = auth();
 export const _database = firebase.database();
 export const _storage = firebase.storage();
-export function getDate() {
+export function dateToday() {
   var today = new Date();
   var dd = String(today.getDate()).padStart(2, '0');
-  var mm = String(today.getMonth() + 1).padStart(2, '0');
+  var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
   var yyyy = today.getFullYear();
   return dd + '.' + mm + '.' + yyyy;
 }
-export function getTime() {
+function generateUID() {
+  return (
+    ('000000' + (Math.random() * 46656).toString(36)).slice(-6) + ''
+  ).toUpperCase();
+}
+export function idDate() {
   var today = new Date();
-  var time =
-    formatTime(today.getHours()) + ':' + formatTime(today.getMinutes());
-  if (today.getHours() >= 12) {
-    time = time + ' pm';
-  } else {
-    time = time + ' am';
-  }
-  return time;
-}
-export function formatTime(x) {
-  return x <= 9 ? '0' + x : x;
-}
-export function numberWithCommas(x) {
-  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-}
-
-export function receivedString(x) {
+  var dd = String(today.getDate()).padStart(2, '0');
+  var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+  var yyyy = today.getFullYear();
+  const hr = today.getHours() > 9 ? today.getHours() : '0' + today.getHours();
+  const min =
+    today.getMinutes() > 9 ? today.getMinutes() : '0' + today.getMinutes();
+  const sec =
+    today.getSeconds() > 9 ? today.getSeconds() : '0' + today.getSeconds();
+  const dT = today.getHours() < 12 ? '-am' : '-pm';
   return (
-    '#' +
-    x.transactionId +
-    ' confirmed that you recieved a total of $ ' +
-    numberWithCommas(x.transactionAmount) +
-    '.00 from ' +
-    x.senderPhoneNumber
+    yyyy +
+    '-' +
+    mm +
+    '-' +
+    dd +
+    '/' +
+    hr +
+    '-' +
+    min +
+    '-' +
+    sec +
+    dT +
+    '_' +
+    generateUID()
   );
 }
-
-export function tokenString(x) {
-  return (
-    '#' +
-    x.transactionId +
-    ' confirmed token withdrawal, a total of $ ' +
-    numberWithCommas(x.transactionAmount) +
-    '.00 . Your withdrawal token is ' +
-    x.tokenCode
-  );
-}
-export function cashString(x) {
-  return (
-    x.transactionId +
-    ' confirmed cash withdrawal, a total of $ ' +
-    numberWithCommas(x.transactionAmount) +
-    '.00'
-  );
-}
-
-export function depositString(x) {
-  return (
-    '#' +
-    x.transactionId +
-    ' confirmed that a total of $ ' +
-    numberWithCommas(x.transactionAmount) +
-    '.00 has been deposited in your account'
-  );
-}
-export function sentString(x) {
-  return (
-    '#' +
-    x.transactionId +
-    ' confirmed that you sent a total of $ ' +
-    numberWithCommas(x.transactionAmount) +
-    '.00 to ' +
-    x.recipientPhoneNumber
-  );
+export function currentTime() {
+  var today = new Date();
+  const hr = today.getHours() > 9 ? today.getHours() : '0' + today.getHours();
+  const min =
+    today.getMinutes() > 9 ? today.getMinutes() : '0' + today.getMinutes();
+  const dT = today.getHours() < 12 ? ' am' : ' pm';
+  return hr + ':' + min + dT;
 }
